@@ -7,7 +7,11 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg  = [0] * 8
+        self.pc = 0
+        self.fl = 0
+        self.halted = False
 
     def load(self):
         """Load a program into memory."""
@@ -60,6 +64,39 @@ class CPU:
 
         print()
 
+    def hlt(self):
+        self.halted = True
+    
+    def increment_pc(self, value):
+        self.pc += value
+
+    def ldi(self):
+        register = self.ram_read(self.pc + 1)
+        value = self.ram_read(self.pc + 2)
+        self.reg[register] = value
+
+    def prn(self):
+        register_num = self.ram_read(self.pc + 1)
+        print(f"Register number: {register_num}")
+        print(self.reg[register_num])
+
+    
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, value, address):
+        self.ram[address] = value
+
     def run(self):
         """Run the CPU."""
-        pass
+        while self.halted == False:
+            if self.ram[self.pc] == 0b10000010:
+                self.ldi()
+                self.increment_pc(3)
+            
+            if self.ram[self.pc] == 0b01000111:
+                self.prn()
+                self.increment_pc(2)
+
+            if self.ram[self.pc] == 0b00000001:
+                self.hlt()
