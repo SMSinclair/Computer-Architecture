@@ -32,6 +32,8 @@ class CPU:
                         program.append(0b01000111)
                     if instruction == 'HLT':
                         program.append(0b00000001)
+                    if instruction == 'MUL':
+                        program.append(0b10100010)
                     if instruction[0]=='R' and instruction[1].isnumeric():
                         program.append(int(instruction[1]))
                     if instruction.isnumeric():
@@ -95,6 +97,9 @@ class CPU:
     def ldi(self, register, value):
         self.reg[register] = value
 
+    def mul(self, reg_a, reg_b):
+        self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
+
     def prn(self, register_num):
         # print(f"Register number: {register_num}")
         print(self.reg[register_num])
@@ -123,5 +128,8 @@ class CPU:
 
             if self.ir == 1:
                 self.hlt()
+
+            if self.ir == 162:
+                self.mul(operand_a, operand_b)
 
             self.pc += ((self.ir >> 6)+1) # use bitshift to incremenet PC past operands
