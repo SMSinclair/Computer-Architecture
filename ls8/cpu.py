@@ -12,28 +12,50 @@ class CPU:
         self.pc = 0
         self.fl = 0
         self.halted = False
+        self.ir = 0
 
-    def load(self):
+    def load(self, filename):
         """Load a program into memory."""
 
-        address = 0
+        path = '../asm/' + filename
+
+        program = []
+
+        with open(path) as f:
+            for line in f:
+                if line == '' or line[0]=='#':
+                    continue
+                for instruction in line.replace(',', ' ').split():
+                    if instruction == 'LDI':
+                        program.append(0b10000010)
+                    if instruction == 'PRN':
+                        program.append(0b01000111)
+                    if instruction == 'HLT':
+                        program.append(0b00000001)
+                    if instruction[0]=='R' and instruction[1].isnumeric():
+                        program.append(int(instruction[1]))
+                    if instruction.isnumeric():
+                        program.append(int(instruction))
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
+
+        address = 0
 
         for instruction in program:
             self.ram[address] = instruction
             address += 1
 
+        # print(self.ram)
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -70,18 +92,15 @@ class CPU:
     def increment_pc(self, value):
         self.pc += value
 
-    def ldi(self):
-        register = self.ram_read(self.pc + 1)
-        value = self.ram_read(self.pc + 2)
+    def ldi(self, register, value):
         self.reg[register] = value
 
-    def prn(self):
-        register_num = self.ram_read(self.pc + 1)
-        print(f"Register number: {register_num}")
+    def prn(self, register_num):
+        # print(f"Register number: {register_num}")
         print(self.reg[register_num])
-
     
     def ram_read(self, address):
+        # address = self.pc
         return self.ram[address]
 
     def ram_write(self, value, address):
@@ -90,13 +109,19 @@ class CPU:
     def run(self):
         """Run the CPU."""
         while self.halted == False:
-            if self.ram[self.pc] == 0b10000010:
-                self.ldi()
-                self.increment_pc(3)
+            self.ir = self.ram_read(self.pc)
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
             
-            if self.ram[self.pc] == 0b01000111:
-                self.prn()
-                self.increment_pc(2)
+            # self.trace()
 
-            if self.ram[self.pc] == 0b00000001:
+            if self.ir == 130:
+                self.ldi(operand_a, operand_b)
+            
+            if self.ir == 71:
+                self.prn(operand_a)
+
+            if self.ir == 1:
                 self.hlt()
+
+            self.pc += ((self.ir >> 6)+1) # use bitshift to incremenet PC past operands
