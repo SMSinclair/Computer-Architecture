@@ -17,27 +17,32 @@ class CPU:
     def load(self, filename):
         """Load a program into memory."""
 
-        path = '../asm/' + filename
+        path = 'examples/' + filename
 
         program = []
 
         with open(path) as f:
             for line in f:
-                if line == '' or line[0]=='#':
+                # skip empty lines and comments
+                if line[0].isnumeric()==False:
                     continue
-                for instruction in line.replace(',', ' ').split():
-                    if instruction == 'LDI':
-                        program.append(0b10000010)
-                    if instruction == 'PRN':
-                        program.append(0b01000111)
-                    if instruction == 'HLT':
-                        program.append(0b00000001)
-                    if instruction == 'MUL':
-                        program.append(0b10100010)
-                    if instruction[0]=='R' and instruction[1].isnumeric():
-                        program.append(int(instruction[1]))
-                    if instruction.isnumeric():
-                        program.append(int(instruction))
+                
+                program.append(int(line[0:8], 2))
+                # this section parses the .asm files
+                # #iterate through instructions on each line
+                # for instruction in line.replace(',', ' ').split():
+                #     if instruction == 'LDI':
+                #         program.append(0b10000010)
+                #     if instruction == 'PRN':
+                #         program.append(0b01000111)
+                #     if instruction == 'HLT':
+                #         program.append(0b00000001)
+                #     if instruction == 'MUL':
+                #         program.append(0b10100010)
+                #     if instruction[0]=='R' and instruction[1].isnumeric():
+                #         program.append(int(instruction[1]))
+                #     if instruction.isnumeric():
+                #         program.append(int(instruction))
 
         # For now, we've just hardcoded a program:
 
