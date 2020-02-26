@@ -8,7 +8,8 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         self.ram = [0] * 256
-        self.reg  = [0] * 8
+        self.reg  = [0] * 8 
+        self.reg[7] = 244 # R7 is the SP
         self.pc = 0
         self.fl = 0
         self.halted = False
@@ -79,17 +80,10 @@ class CPU:
         from run() if you need help debugging.
         """
 
-        print(f"TRACE: %02X | %02X %02X %02X |" % (
-            self.pc,
-            #self.fl,
-            #self.ie,
-            self.ram_read(self.pc),
-            self.ram_read(self.pc + 1),
-            self.ram_read(self.pc + 2)
-        ), end='')
+        print(f"TRACE: {self.pc+1} | {self.ram_read(self.pc)} {self.ram_read(self.pc + 1)} {self.ram_read(self.pc + 2)} | ", end = '')
 
         for i in range(8):
-            print(" %02X" % self.reg[i], end='')
+            print(f" {self.reg[i]} ", end = '')
 
         print()
 
@@ -109,6 +103,25 @@ class CPU:
         # print(f"Register number: {register_num}")
         print(self.reg[register_num])
     
+    def push(self, register):
+        '''
+        Push the value in the given register on the stack.
+        '''
+        # decrement the SP
+        self.reg[7] -= 1
+        # put the value in the specified register in address pointed to by SP
+        self.ram[self.reg[7]] = self.reg[register]
+        # print(f"Top of the stack is {self.ram[self.reg[7]]} at address {self.reg[7]}")
+
+    def pop(self, register):
+        '''
+        Pop the value at the top of the stack into the given register.
+        '''
+        #Copy the value from the address pointed to by `SP` to the given register.
+        self.reg[register] = self.ram[self.reg[7]]
+        # Increment `SP`.
+        self.reg[7] += 1
+
     def ram_read(self, address):
         # address = self.pc
         return self.ram[address]
@@ -136,5 +149,11 @@ class CPU:
 
             if self.ir == 162:
                 self.mul(operand_a, operand_b)
+
+            if self.ir == 69:
+                self.push(operand_a)
+
+            if self.ir == 70:
+                self.pop(operand_a)
 
             self.pc += ((self.ir >> 6)+1) # use bitshift to incremenet PC past operands
