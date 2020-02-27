@@ -16,55 +16,22 @@ class CPU:
         self.ir = 0
 
     def load(self, filename):
-        """Load a program into memory."""
+        """Load an ls8 program into memory."""
 
         path = 'examples/' + filename
-
-        program = []
+        address = 0
 
         with open(path) as f:
             for line in f:
                 # skip empty lines and comments
                 if line[0].isnumeric()==False:
                     continue
-                
-                program.append(int(line[0:8], 2))
-                # this section parses the .asm files
-                # #iterate through instructions on each line
-                # for instruction in line.replace(',', ' ').split():
-                #     if instruction == 'LDI':
-                #         program.append(0b10000010)
-                #     if instruction == 'PRN':
-                #         program.append(0b01000111)
-                #     if instruction == 'HLT':
-                #         program.append(0b00000001)
-                #     if instruction == 'MUL':
-                #         program.append(0b10100010)
-                #     if instruction[0]=='R' and instruction[1].isnumeric():
-                #         program.append(int(instruction[1]))
-                #     if instruction.isnumeric():
-                #         program.append(int(instruction))
+                self.ram[address] = int(line[0:8], 2)
+                address += 1
 
-        # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-
-        address = 0
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
-
-        # print(self.ram)
-
+    def add(self, reg_a, reg_b):
+        self.reg[reg_a] = self.reg[reg_a] + self.reg[reg_b]
+    
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
@@ -73,6 +40,46 @@ class CPU:
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
+
+    def call(self, operand_a):
+        '''
+        Calls a subroutine (function) at the address stored in the register.
+
+        Machine code:
+
+        01010000 00000rrr
+        50 0r
+        '''
+        
+        # The address of the ***instruction*** _directly after_ `CALL` is pushed onto 
+        # the stack. This allows us to return to where we left off when the subroutine 
+        # finishes executing.
+        
+        # decrement the SP
+        self.reg[7] -= 1
+        # put the value in the specified register in address pointed to by SP
+        self.ram[self.reg[7]] = self.pc + 2
+        
+        # The PC is set to the address stored in the given register. We jump to that 
+        # location in RAM and execute the first instruction in the subroutine. The PC 
+        # can move forward or backwards from its current location.
+        self.pc = self.reg[operand_a]
+    
+    def ret(self):
+        '''
+        Return from subroutine.
+
+        Machine Code:
+        00010001
+        11
+        '''
+
+        # Pop the value from the top of the stack and store it in the `PC`.
+
+        #Copy the value from the address pointed to by `SP` to the given register.
+        self.pc = self.ram[self.reg[7]]
+        # Increment `SP`.
+        self.reg[7] += 1
 
     def trace(self):
         """
@@ -156,4 +163,14 @@ class CPU:
             if self.ir == 70:
                 self.pop(operand_a)
 
-            self.pc += ((self.ir >> 6)+1) # use bitshift to incremenet PC past operands
+            if self.ir == 80:
+                self.call(operand_a)
+
+            if self.ir == 17:
+                self.ret()
+            
+            if self.ir == 160:
+                self.add(operand_a, operand_b)
+
+            if self.ir !=80 and self.ir != 17:
+                self.pc += ((self.ir >> 6)+1) # use bitshift to incremenet PC past operands
