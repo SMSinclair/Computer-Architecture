@@ -64,6 +64,75 @@ class CPU:
             elif self.reg[reg_a] == self.reg[reg_b]:
                 self.fl = 0b00000001 #1 decimal
                 # print(f"Equal flag: {self.fl}")
+        if op == "AND":
+            '''
+            Bitwise-AND the values in registerA and registerB, then store the result in 
+            registerA.
+
+            10101000 00000aaa 00000bbb
+            A8 0a 0b
+            '''
+            self.reg[reg_a] = self.reg[reg_a] & self.reg[reg_b]
+        if op == "OR":
+            '''
+            Perform a bitwise-OR between the values in registerA and registerB, storing the
+            result in registerA.
+
+            10101010 00000aaa 00000bbb
+            AA 0a 0b
+            '''
+            self.reg[reg_a] = self.reg[reg_a] | self.reg[reg_b]
+        if op == "XOR":
+            '''
+            Perform a bitwise-XOR between the values in registerA and registerB, storing the
+            result in registerA.
+
+            10101011 00000aaa 00000bbb
+            AB 0a 0b
+            '''
+            self.reg[reg_a] = self.reg[reg_a] ^ self.reg[reg_b]
+        if op == "NOT":
+            '''
+            Perform a bitwise-NOT on the value in a register.
+
+            01101001 00000rrr
+            69 0r
+            '''
+            self.reg[reg_a] = ~self.reg[reg_a]
+        if op == "SHL":
+            '''
+            Shift the value in registerA left by the number of bits specified in registerB,
+            filling the low bits with 0.
+
+            10101100 00000aaa 00000bbb
+            AC 0a 0b
+            '''
+            self.reg[reg_a] = self.reg[reg_a] << self.reg[reg_b]
+        if op == "SHR":
+            '''
+            Shift the value in registerA right by the number of bits specified in registerB,
+            filling the high bits with 0.
+
+            10101101 00000aaa 00000bbb
+            AD 0a 0b
+            '''
+            self.reg[reg_a] = self.reg[reg_a] >> self.reg[reg_b]
+        if op == "MOD":
+            '''
+            Divide the value in the first register by the value in the second,
+            storing the _remainder_ of the result in registerA.
+
+            If the value in the second register is 0, the system should print an
+            error message and halt.
+
+            10100100 00000aaa 00000bbb
+            A4 0a 0b
+            '''
+            if self.reg[reg_b] == 0:
+                print(f"ZeroDivisionError: integer division or modulo by zero")
+                self.hlt()
+            else:
+                self.reg[reg_a] = self.reg[reg_a] % self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -247,6 +316,27 @@ class CPU:
 
             elif self.ir == 167:
                 self.alu("CMP", operand_a, operand_b)
+            
+            elif self.ir == 168:
+                self.alu("AND", operand_a, operand_b)
+
+            elif self.ir == 170:
+                self.alu("OR", operand_a, operand_b)
+            
+            elif self.ir == 171:
+                self.alu("XOR", operand_a, operand_b)
+
+            elif self.ir == 105:
+                self.alu("NOT", operand_a)
+
+            elif self.ir == 172:
+                self.alu("SHL", operand_a, operand_b)
+
+            elif self.ir == 173:
+                self.alu("SHR", operand_a, operand_b)
+
+            elif self.ir == 164:
+                self.alu("MOD", operand_a, operand_b)
 
             elif self.ir == 84:
                 self.jmp(operand_a)
