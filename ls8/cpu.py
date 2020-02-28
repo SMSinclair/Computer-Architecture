@@ -11,7 +11,7 @@ class CPU:
         self.reg  = [0] * 8 
         self.reg[7] = 244 # R7 is the SP
         self.pc = 0
-        self.fl = 0
+        self.fl = 0b00000000
         self.halted = False
         self.ir = 0
 
@@ -27,7 +27,7 @@ class CPU:
                 if line[0].isnumeric()==False:
                     continue
                 self.ram[address] = int(line[0:8], 2)
-                address += 1
+                address += 1 
 
     def add(self, reg_a, reg_b):
         self.reg[reg_a] = self.reg[reg_a] + self.reg[reg_b]
@@ -38,6 +38,32 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         #elif op == "SUB": etc
+        elif op == "CMP":
+            '''
+            Compare the values in two registers.
+
+            * If they are equal, set the Equal `E` flag to 1, otherwise set it to 0.
+            
+            * If registerA is less than registerB, set the Less-than `L` flag to 1,
+            otherwise set it to 0.
+
+            * If registerA is greater than registerB, set the Greater-than `G` flag
+            to 1, otherwise set it to 0.
+
+            `FL` bits: `00000LGE`
+
+            Machine code:
+            10100111 00000aaa 00000bbb
+            A7 0a 0b
+            '''
+            
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.fl = 0b00000100 # 4 decimal
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.fl = 0b00000010 #2 decimal
+            elif self.reg[reg_a] == self.reg[reg_b]:
+                self.fl = 0b00000001 #1 decimal
+                # print(f"Equal flag: {self.fl}")
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -65,6 +91,51 @@ class CPU:
         # can move forward or backwards from its current location.
         self.pc = self.reg[operand_a]
     
+    def jmp(self, register_address):
+        '''
+        Jump to the address stored in the given register.
+
+        Set the `PC` to the address stored in the given register.
+
+        Machine code:
+        01010100 00000rrr
+        54 0r
+        '''
+
+        self.pc = self.reg[register_address]
+
+    def jeq(self, register_address):
+        '''
+         If `equal` flag is set (true), jump to the address stored in the given register.
+
+        Machine code:
+        01010101 00000rrr
+        55 0r
+        '''
+        if self.fl == 1:
+            self.pc = self.reg[register_address]
+        else: 
+            self.pc += 2
+    
+    def jne(self, register_address):
+        '''
+        `JNE register`
+
+        If `E` flag is clear (false, 0), jump to the address stored in the given
+        register.
+
+        Machine code:
+        01010110 00000rrr
+        56 0r
+        '''
+
+        if self.fl != 1:
+            self.pc = self.reg[register_address]
+            # print(f"Jumping to {self.pc}")
+        
+        else:
+            self.pc += 2
+
     def ret(self):
         '''
         Return from subroutine.
@@ -138,7 +209,9 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+    
         while self.halted == False:
+        # for i in range(50):
             self.ir = self.ram_read(self.pc)
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
@@ -148,29 +221,42 @@ class CPU:
             if self.ir == 130:
                 self.ldi(operand_a, operand_b)
             
-            if self.ir == 71:
+            elif self.ir == 71:
                 self.prn(operand_a)
 
-            if self.ir == 1:
+            elif self.ir == 1:
                 self.hlt()
 
-            if self.ir == 162:
+            elif self.ir == 162:
                 self.mul(operand_a, operand_b)
 
-            if self.ir == 69:
+            elif self.ir == 69:
                 self.push(operand_a)
 
-            if self.ir == 70:
+            elif self.ir == 70:
                 self.pop(operand_a)
 
-            if self.ir == 80:
+            elif self.ir == 80:
                 self.call(operand_a)
 
-            if self.ir == 17:
+            elif self.ir == 17:
                 self.ret()
             
-            if self.ir == 160:
+            elif self.ir == 160:
                 self.add(operand_a, operand_b)
 
-            if self.ir !=80 and self.ir != 17:
+            elif self.ir == 167:
+                self.alu("CMP", operand_a, operand_b)
+
+            elif self.ir == 84:
+                self.jmp(operand_a)
+
+            elif self.ir == 85:
+                self.jeq(operand_a)
+
+            elif self.ir == 86:
+                self.jne(operand_a)
+
+            if self.ir !=80 and self.ir != 17 and self.ir != 84 and self.ir != 85 and self.ir != 86:
                 self.pc += ((self.ir >> 6)+1) # use bitshift to incremenet PC past operands
+                # print(f"PC incremented {((self.ir >> 6)+1)}")
