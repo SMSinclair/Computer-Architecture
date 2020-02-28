@@ -31,7 +31,7 @@ class CPU:
 
     def add(self, reg_a, reg_b):
         self.reg[reg_a] = self.reg[reg_a] + self.reg[reg_b]
-    
+
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
@@ -64,7 +64,7 @@ class CPU:
             elif self.reg[reg_a] == self.reg[reg_b]:
                 self.fl = 0b00000001 #1 decimal
                 # print(f"Equal flag: {self.fl}")
-        if op == "AND":
+        elif op == "AND":
             '''
             Bitwise-AND the values in registerA and registerB, then store the result in 
             registerA.
@@ -73,7 +73,7 @@ class CPU:
             A8 0a 0b
             '''
             self.reg[reg_a] = self.reg[reg_a] & self.reg[reg_b]
-        if op == "OR":
+        elif op == "OR":
             '''
             Perform a bitwise-OR between the values in registerA and registerB, storing the
             result in registerA.
@@ -82,7 +82,7 @@ class CPU:
             AA 0a 0b
             '''
             self.reg[reg_a] = self.reg[reg_a] | self.reg[reg_b]
-        if op == "XOR":
+        elif op == "XOR":
             '''
             Perform a bitwise-XOR between the values in registerA and registerB, storing the
             result in registerA.
@@ -91,7 +91,7 @@ class CPU:
             AB 0a 0b
             '''
             self.reg[reg_a] = self.reg[reg_a] ^ self.reg[reg_b]
-        if op == "NOT":
+        elif op == "NOT":
             '''
             Perform a bitwise-NOT on the value in a register.
 
@@ -99,7 +99,7 @@ class CPU:
             69 0r
             '''
             self.reg[reg_a] = ~self.reg[reg_a]
-        if op == "SHL":
+        elif op == "SHL":
             '''
             Shift the value in registerA left by the number of bits specified in registerB,
             filling the low bits with 0.
@@ -108,7 +108,7 @@ class CPU:
             AC 0a 0b
             '''
             self.reg[reg_a] = self.reg[reg_a] << self.reg[reg_b]
-        if op == "SHR":
+        elif op == "SHR":
             '''
             Shift the value in registerA right by the number of bits specified in registerB,
             filling the high bits with 0.
@@ -117,7 +117,7 @@ class CPU:
             AD 0a 0b
             '''
             self.reg[reg_a] = self.reg[reg_a] >> self.reg[reg_b]
-        if op == "MOD":
+        elif op == "MOD":
             '''
             Divide the value in the first register by the value in the second,
             storing the _remainder_ of the result in registerA.
